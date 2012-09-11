@@ -57,6 +57,8 @@ pthread_cond_t audiobuf_cond = PTHREAD_COND_INITIALIZER;
 
 int win_h, win_w;
 
+FILE* f;
+
 void in_callback(freenect_device* dev, int num_samples,
                  int32_t* mic1, int32_t* mic2,
                  int32_t* mic3, int32_t* mic4,
@@ -68,6 +70,7 @@ void in_callback(freenect_device* dev, int num_samples,
 		memcpy(&(c->buffers[1][c->current_idx]), mic2, num_samples*sizeof(int32_t));
 		memcpy(&(c->buffers[2][c->current_idx]), mic3, num_samples*sizeof(int32_t));
 		memcpy(&(c->buffers[3][c->current_idx]), mic4, num_samples*sizeof(int32_t));
+		fwrite(mic1, num_samples, sizeof(int32_t), f);
 	} else {
 		int first = c->max_samples - c->current_idx;
 		int left = num_samples - first;
@@ -79,6 +82,7 @@ void in_callback(freenect_device* dev, int num_samples,
 		memcpy(c->buffers[1], &mic2[first], left*sizeof(int32_t));
 		memcpy(c->buffers[2], &mic3[first], left*sizeof(int32_t));
 		memcpy(c->buffers[3], &mic4[first], left*sizeof(int32_t));
+		fwrite(mic1, first+left, sizeof(int32_t), f);
 	}
 	c->current_idx = (c->current_idx + num_samples) % c->max_samples;
 	c->new_data = 1;
@@ -192,6 +196,7 @@ int main(int argc, char** argv) {
 
 	freenect_set_audio_in_callback(f_dev, in_callback);
 	freenect_start_audio(f_dev);
+	printf("Audio started.\n");
 
 	int res = pthread_create(&freenect_thread, NULL, freenect_threadfunc, NULL);
 	if (res) {
@@ -200,6 +205,18 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 	printf("This is the libfreenect microphone waveform viewer.  Press 'q' to quit or spacebar to pause/unpause the view.\n");
+
+	f = fopen("./audio.raw", "w");
+	if (f == NULL) {
+	  printf("Erreur lors de l'ouverture du fichier.\n");
+	  return -1;
+	}
+	/* if (fclose(f) != 0) { */
+	/*   printf("Erreur lors de la fermeture du fichier.\n"); */
+	/*   return -1; */
+	/* } */
+
+	while (1) {};
 
 	/*
 	glutInit(&argc, argv);
