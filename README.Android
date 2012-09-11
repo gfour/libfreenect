@@ -1,0 +1,11 @@
+This is libfreenect for Android, with audio support. It is the same codebase as the regular libfreenect, with minimal changes and a simpler, Android-only CMake configuration.
+
+To build libfreenect with audio support for Android you need:
+- CMake
+- android-cmake (http://code.google.com/p/android-cmake/), with a toolchain configured with the ANDTOOLCHAIN variable as described in its documentation
+- libusb-1.0 for Android (header files and .so library)
+
+To compile the library, change to ./src and run:
+
+  cmake -DCMAKE_TOOLCHAIN_FILE=$ANDTOOLCHAIN -DLIBUSB_1_INCLUDE_DIR=path-to-libusb-headers -DLIBUSB_1_LIBRARY=path-to-libusb.so
+
