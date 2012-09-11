@@ -52,9 +52,13 @@ if(APPLE)
 # Linux, not so much
 else()
 
-  find_package(Threads REQUIRED)
-  find_package(OpenGL REQUIRED)
-  find_package(GLUT REQUIRED)
+  if(ANDROID)
+    message("OpenGL/GLUT disabled in the examples for Android.")
+  else(ANDROID)
+    find_package(Threads REQUIRED)
+    find_package(OpenGL REQUIRED)
+    find_package(GLUT REQUIRED)
+  endif(ANDROID)
 
   include_directories(${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS} ${USB_INCLUDE_DIRS})
 

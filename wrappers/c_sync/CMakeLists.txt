@@ -6,8 +6,10 @@ if (WIN32)
   set(THREADS_USE_PTHREADS_WIN32 true)
 endif()
 
-find_package(Threads REQUIRED)
-include_directories(${THREADS_PTHREADS_INCLUDE_DIR})
+if(NOT ANDROID)
+  find_package(Threads REQUIRED)
+  include_directories(${THREADS_PTHREADS_INCLUDE_DIR})
+endif(NOT ANDROID)
 
 add_library (freenect_sync SHARED libfreenect_sync.c)
 add_library (freenect_sync_static STATIC libfreenect_sync.c)

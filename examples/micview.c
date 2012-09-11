@@ -30,7 +30,10 @@
 #include <string.h>
 #include <signal.h>
 #include <pthread.h>
+
+#ifndef __ANDROID__
 #include <GL/glut.h>
+#endif /* __ANDROID__ */
 
 pthread_t freenect_thread;
 volatile int die = 0;
@@ -93,6 +96,7 @@ void* freenect_threadfunc(void* arg) {
 	return NULL;
 }
 
+/*
 void DrawMicData() {
 	if (paused)
 		return;
@@ -140,6 +144,7 @@ void Reshape(int w, int h) {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
+*/
 
 void Keyboard(unsigned char key, int x, int y) {
 	if(key == 'q') {
@@ -196,6 +201,7 @@ int main(int argc, char** argv) {
 	}
 	printf("This is the libfreenect microphone waveform viewer.  Press 'q' to quit or spacebar to pause/unpause the view.\n");
 
+	/*
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_ALPHA );
 	glutInitWindowSize(800, 600);
@@ -211,6 +217,7 @@ int main(int argc, char** argv) {
 	glutKeyboardFunc(Keyboard);
 
 	glutMainLoop();
+	*/
 
 	return 0;
 }

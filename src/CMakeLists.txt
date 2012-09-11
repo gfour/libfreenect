@@ -1,64 +1,31 @@
-######################################################################################
-# Build for main library
-######################################################################################
+project(test)
+cmake_minimum_required(VERSION 2.8)
 
-include_directories (${CMAKE_CURRENT_SOURCE_DIR})
+add_definitions( -DBUILD_AUDIO )
 
-set(CMAKE_C_FLAGS "-Wall")
+add_library(LIBUSB SHARED IMPORTED)
+set_target_properties(LIBUSB PROPERTIES
+  IMPORTED_LOCATION ${LIBUSB_1_LIBRARY}
+  LINKER_LANGUAGE C)
+#  IMPORTED_LOCATION /home/semi/workspace/proj1/libs/armeabi/libusb.so
 
-include_directories(${LIBUSB_1_INCLUDE_DIRS})
-IF(WIN32)
-  LIST(APPEND SRC core.c tilt.c cameras.c usb_libusb10.c registration.c ../platform/windows/libusb10emu/libusb-1.0/libusbemu.cpp ../platform/windows/libusb10emu/libusb-1.0/failguard.cpp)
-  set_source_files_properties(${SRC} PROPERTIES LANGUAGE CXX)
-ELSE(WIN32)
-  LIST(APPEND SRC core.c tilt.c cameras.c usb_libusb10.c registration.c)
-ENDIF(WIN32)
+# add_library(LIBM SHARED IMPORTED)
+# set_target_properties(LIBM PROPERTIES
+#   IMPORTED_LOCATION /home/semi/workspace/c/tegra-ftdi/tegra-libs/libm.so
+#   LINKER_LANGUAGE C)
 
-IF(BUILD_AUDIO)
-  include(FindPythonInterp)
-  LIST(APPEND SRC audio.c loader.c)
-  IF(BUILD_REDIST_PACKAGE)
-    # If this build is intended for a redistributable package, we can't include audios.bin, so we should include fwfetcher.py
-    # and the package should run "python fwfetcher.py $INSTALL_PREFIX/share" as a postinst hook
-    install (FILES "fwfetcher.py" DESTINATION "${CMAKE_INSTALL_PREFIX}/share")
-  ELSE(BUILD_REDIST_PACKAGE)
-    # If the install is local only, we can just run fwfetcher.py and install the audios.bin firmware to the system folder
-    add_custom_target(firmware ALL
-        COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/fwfetcher.py" "../audios.bin"
-        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/fwfetcher.py")
-    install (FILES "${CMAKE_CURRENT_BINARY_DIR}/../audios.bin" DESTINATION "${CMAKE_INSTALL_PREFIX}/share/libfreenect")
-  ENDIF()
-ENDIF()
+# include_directories(../include /home/semi/workspace/c/tegra-ftdi/libusb-1.0/ .)
+include_directories(../include ../wrappers/c_sync/ ${LIBUSB_1_INCLUDE_DIR} ./)
+# add_library(freenect SHARED ./freenect_internal.h ./audio.c ./cameras.h ./core.c ./loader.c ./registration.c ./tilt.c ./cameras.c ./usb_libusb10.c)
+add_library(freenect SHARED ./audio.c ./cameras.h ./core.c ./loader.c ./registration.c ./tilt.c ./cameras.c ./usb_libusb10.c ../wrappers/c_sync/libfreenect_sync.c)
+# target_link_libraries(freenect LIBM LIBUSB)
+target_link_libraries(freenect LIBUSB)
 
-add_library (freenect SHARED ${SRC})
-set_target_properties ( freenect PROPERTIES
-  VERSION ${PROJECT_VER}
-  SOVERSION ${PROJECT_APIVER})	
-install (TARGETS freenect
-  DESTINATION "${PROJECT_LIBRARY_INSTALL_DIR}")
+add_executable(micview ../examples/micview.c)
+target_link_libraries(micview freenect LIBUSB)
 
-add_library (freenectstatic STATIC ${SRC})
-set_target_properties (freenectstatic PROPERTIES OUTPUT_NAME freenect)
-IF(UNIX AND NOT APPLE)
-  SET_TARGET_PROPERTIES (freenectstatic PROPERTIES COMPILE_FLAGS "-fPIC")
-ENDIF()
-install (TARGETS freenectstatic
-  DESTINATION "${PROJECT_LIBRARY_INSTALL_DIR}")
+add_executable(regtest ../examples/regtest.c)
+target_link_libraries(regtest freenect LIBUSB)
 
-target_link_libraries (freenect ${LIBUSB_1_LIBRARIES})
-target_link_libraries (freenectstatic ${LIBUSB_1_LIBRARIES})
-
-# Install the header files
-install (FILES "../include/libfreenect.h" "../include/libfreenect-registration.h"
-  DESTINATION ${PROJECT_INCLUDE_INSTALL_DIR})
-if(BUILD_AUDIO)
-  install (FILES "../include/libfreenect-audio.h"
-    DESTINATION ${PROJECT_INCLUDE_INSTALL_DIR})
-endif()
-
-IF(UNIX AND NOT APPLE)
-  # Produce a pkg-config file for linking against the shared lib
-  configure_file ("libfreenect.pc.in" "libfreenect.pc" @ONLY)
-  install (FILES "${CMAKE_CURRENT_BINARY_DIR}/libfreenect.pc"
-    DESTINATION "${PROJECT_LIBRARY_INSTALL_DIR}/pkgconfig")
-ENDIF()
+add_executable(tiltdemo ../examples/tiltdemo.c)
+target_link_libraries(tiltdemo freenect LIBUSB)
